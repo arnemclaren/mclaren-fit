@@ -933,7 +933,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       '<div class="section"><span class="eyebrow">Daten</span><span class="small muted">Deine Daten liegen nur auf diesem iPhone. Sichere sie regelmäßig, z. B. in iCloud Drive. ' + (S.lastBackup ? "Letztes Backup: " + fmtDate(S.lastBackup) + "." : "Noch kein Backup.") + "</span>" +
       '<div class="list">' + row("box", "Backup speichern", "", "export") + '<label for="importfile" class="li" role="button"><span class="lic">' + ic("down", 18) + '</span><span class="grow"><b>Backup oder Plan laden</b><span class="s">Datei auswählen</span></span><span class="chev">' + ic("right", 18) + "</span></label>" + row("plan", "Als Text einfügen", "Falls die Datei sich nicht wählen lässt", "paste") + "</div>" +
       (S.confirm === "import" && S.pendingImport ? '<div class="panel stack"><span class="small"><b>Backup vom ' + fmtDate(S.pendingImport.date) + "</b> mit " + (S.pendingImport.workouts || []).length + ' Trainings laden? Alle aktuellen Daten werden ersetzt.</span><div class="row"><button class="ghostbtn danger grow" data-a="importok">Ersetzen</button><button class="ghostbtn" data-a="noconfirm">Abbrechen</button></div></div>' : "") +
-      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
+      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 7<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
   }
 
   /* ---------- Pause & Uhr ---------- */
