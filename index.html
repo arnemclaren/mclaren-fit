@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="McLaren-Fit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#F5F6F8" id="themecolor">
+<meta name="theme-color" content="#16181C" id="themecolor">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
@@ -130,7 +130,6 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 /* Training */
 body.training { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
 .tbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; background: var(--bg); display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 8px; padding-block: 4px 8px; margin-inline: -16px; padding-inline: 16px; }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--band); z-index: 30; pointer-events: none; }
 .tbar .mid { text-align: center; }
 .tbar .mid b { display: block; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tbar .clock { color: var(--muted); font-size: .85rem; }
@@ -318,6 +317,23 @@ nav.tabs button[aria-current="page"] { color: var(--accent); }
 .prof { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .li .lic { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; color: var(--muted); flex: none; }
 @media (prefers-reduced-motion: no-preference) { .sheet { animation: up .22s cubic-bezier(.2,.8,.2,1); } @keyframes up { from { transform: translateY(40px); opacity: .5; } } }
+
+/* ===== Rahmen: dunkle Kopf- und Fußleiste, damit die iOS-Ränder (Statusleiste, Home-Leiste) nahtlos übergehen ===== */
+html { background: var(--band); }
+body { min-height: 100vh; min-height: 100dvh; padding-top: 0 !important; }
+.top, .head { position: sticky; top: 0; z-index: 8; background: var(--band); color: #F3F4F6;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 14px calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
+.top .date { color: rgba(243,244,246,.65); }
+.head h1 { color: #F3F4F6; font-size: 1.4rem; }
+.tbar { top: 0; background: var(--band); color: #F3F4F6; margin-bottom: 14px;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px 12px; }
+.tbar .clock { color: rgba(243,244,246,.65); }
+.tbar .iconbtn { background: rgba(255,255,255,.1); color: #F3F4F6; }
+.strip2 { margin-top: 0; }
+nav.tabs { background: var(--band); border-top: 0; }
+nav.tabs button { color: rgba(243,244,246,.55); }
+nav.tabs button[aria-current="page"] { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -933,7 +949,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       '<div class="section"><span class="eyebrow">Daten</span><span class="small muted">Deine Daten liegen nur auf diesem iPhone. Sichere sie regelmäßig, z. B. in iCloud Drive. ' + (S.lastBackup ? "Letztes Backup: " + fmtDate(S.lastBackup) + "." : "Noch kein Backup.") + "</span>" +
       '<div class="list">' + row("box", "Backup speichern", "", "export") + '<label for="importfile" class="li" role="button"><span class="lic">' + ic("down", 18) + '</span><span class="grow"><b>Backup oder Plan laden</b><span class="s">Datei auswählen</span></span><span class="chev">' + ic("right", 18) + "</span></label>" + row("plan", "Als Text einfügen", "Falls die Datei sich nicht wählen lässt", "paste") + "</div>" +
       (S.confirm === "import" && S.pendingImport ? '<div class="panel stack"><span class="small"><b>Backup vom ' + fmtDate(S.pendingImport.date) + "</b> mit " + (S.pendingImport.workouts || []).length + ' Trainings laden? Alle aktuellen Daten werden ersetzt.</span><div class="row"><button class="ghostbtn danger grow" data-a="importok">Ersetzen</button><button class="ghostbtn" data-a="noconfirm">Abbrechen</button></div></div>' : "") +
-      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 7<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
+      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 8<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
   }
 
   /* ---------- Pause & Uhr ---------- */
@@ -1167,7 +1183,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   function applyTheme() {
     var t = S.profile.theme || "light"; document.documentElement.setAttribute("data-theme", t);
     var dark = t === "dark" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
-    var m = $("themecolor"); if (m) m.setAttribute("content", dark ? "#0E0F11" : "#F5F6F8");
+    var m = $("themecolor"); if (m) m.setAttribute("content", dark ? "#0E0F11" : "#16181C");
   }
   function boot() {
     S.plans = get("plans", null); if (!S.plans) { S.plans = clone(window.DEFAULT_PLANS); savePlans(); }
