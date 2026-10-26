@@ -320,14 +320,19 @@ nav.tabs button[aria-current="page"] { color: var(--accent); }
 
 /* ===== Rahmen: dunkle Kopf- und Fußleiste, damit die iOS-Ränder (Statusleiste, Home-Leiste) nahtlos übergehen ===== */
 html { background: var(--band); }
-body { min-height: 100vh; min-height: 100dvh; padding-top: 0 !important; }
+/* iOS färbt die Ränder (unter Uhr und Home-Leiste) mit der Hintergrundfarbe von body ein: body dunkel, Inhalt hell */
+body { background: var(--band) !important; padding: 0 !important; min-height: 100vh; min-height: 100dvh; }
+#app { max-width: none; background: var(--bg); min-height: 100vh; min-height: 100dvh;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(72px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+#view { max-width: 600px; margin-inline: auto; }
+body.training #app { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
 .top, .head { position: sticky; top: 0; z-index: 8; background: var(--band); color: #F3F4F6;
   margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 14px calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
 .top .date { color: rgba(243,244,246,.65); }
 .head h1 { color: #F3F4F6; font-size: 1.4rem; }
 .tbar { top: 0; background: var(--band); color: #F3F4F6; margin-bottom: 14px;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px 12px; }
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px; }
 .tbar .clock { color: rgba(243,244,246,.65); }
 .tbar .iconbtn { background: rgba(255,255,255,.1); color: #F3F4F6; }
 .strip2 { margin-top: 0; }
@@ -949,7 +954,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       '<div class="section"><span class="eyebrow">Daten</span><span class="small muted">Deine Daten liegen nur auf diesem iPhone. Sichere sie regelmäßig, z. B. in iCloud Drive. ' + (S.lastBackup ? "Letztes Backup: " + fmtDate(S.lastBackup) + "." : "Noch kein Backup.") + "</span>" +
       '<div class="list">' + row("box", "Backup speichern", "", "export") + '<label for="importfile" class="li" role="button"><span class="lic">' + ic("down", 18) + '</span><span class="grow"><b>Backup oder Plan laden</b><span class="s">Datei auswählen</span></span><span class="chev">' + ic("right", 18) + "</span></label>" + row("plan", "Als Text einfügen", "Falls die Datei sich nicht wählen lässt", "paste") + "</div>" +
       (S.confirm === "import" && S.pendingImport ? '<div class="panel stack"><span class="small"><b>Backup vom ' + fmtDate(S.pendingImport.date) + "</b> mit " + (S.pendingImport.workouts || []).length + ' Trainings laden? Alle aktuellen Daten werden ersetzt.</span><div class="row"><button class="ghostbtn danger grow" data-a="importok">Ersetzen</button><button class="ghostbtn" data-a="noconfirm">Abbrechen</button></div></div>' : "") +
-      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 8<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
+      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 9<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
   }
 
   /* ---------- Pause & Uhr ---------- */
