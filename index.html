@@ -50,12 +50,13 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+html.navgap { background: var(--surface); }
 [hidden] { display: none !important; }
 .vh { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
 label.cta, label.ghostbtn, label.li { cursor: pointer; }
 .field textarea { min-height: 140px; resize: vertical; font-size: 14px; font-family: ui-monospace, monospace; }
-body { margin: 0; padding-top: 6px; background: var(--bg); color: var(--fg); font: 400 16px/1.45 var(--font-body); -webkit-tap-highlight-color: transparent;
-  padding: calc(6px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(96px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 16px/1.45 var(--font-body); -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) calc(76px + var(--navpad, env(safe-area-inset-bottom, 0px))) max(16px, env(safe-area-inset-left, 0px)); }
 #app { max-width: 600px; margin-inline: auto; }
 button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
 input, select { font: inherit; color: inherit; }
@@ -72,8 +73,8 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 .section { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
 
 /* Kopf */
-.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px 14px; }
-.head h1 { font-size: 2.1rem; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 4px 10px; }
+.head h1 { font-size: 1.7rem; }
 .iconbtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--fg); background: var(--surface); flex: none; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,.2); z-index: 30; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; max-width: calc(100% - 32px); }
 
@@ -128,7 +129,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 
 /* Training */
 body.training { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
-.tbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; background: var(--bg); display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 8px; padding-block: 10px; margin-inline: -16px; padding-inline: 16px; }
+.tbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; background: var(--bg); display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 8px; padding-block: 4px 8px; margin-inline: -16px; padding-inline: 16px; }
 body.training::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 10; }
 .tbar .mid { text-align: center; }
 .tbar .mid b { display: block; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -185,9 +186,9 @@ body.training::before { content: ""; position: fixed; inset: 0 0 auto; height: e
 .allok b { display: block; font-size: 1.1rem; }
 
 /* Kopf, Karussell */
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px 14px; }
-.top .brand { font: italic 850 1.35rem/1 var(--font-display); font-stretch: 88%; color: var(--accent); }
-.top .date { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 4px 10px; }
+.top .brand { font: italic 850 1.2rem/1 var(--font-display); font-stretch: 88%; color: var(--accent); }
+.top .date { font-size: .8rem; color: var(--muted); margin-top: 2px; }
 .car { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
 .car::-webkit-scrollbar { display: none; }
 .car .hero { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
@@ -239,9 +240,9 @@ body.training::before { content: ""; position: fixed; inset: 0 0 auto; height: e
 
 /* Tabs */
 nav.tabs { position: fixed; inset-inline: 0; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line);
-  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  padding: 0 env(safe-area-inset-right, 0px) var(--navpad, env(safe-area-inset-bottom, 0px)) env(safe-area-inset-left, 0px); }
 nav.tabs .in { display: flex; max-width: 600px; margin-inline: auto; }
-nav.tabs button { flex: 1; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: .7rem; font-weight: 700; color: var(--muted); }
+nav.tabs button { flex: 1; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: .7rem; font-weight: 700; color: var(--muted); }
 nav.tabs button[aria-current="page"] { color: var(--accent); }
 .resume { position: fixed; inset-inline: 0; bottom: calc(66px + env(safe-area-inset-bottom, 0px)); z-index: 6; padding-inline: max(12px, env(safe-area-inset-left, 0px)); }
 .resume button { max-width: 600px; margin-inline: auto; display: flex; width: 100%; align-items: center; gap: 10px; background: var(--accent); color: var(--accent-ink); border-radius: 16px; padding: 12px 16px; font-weight: 800; text-align: left; }
@@ -284,7 +285,7 @@ nav.tabs button[aria-current="page"] { color: var(--accent); }
 .mbar .track b { position: absolute; top: 0; bottom: 0; border-left: 1px dashed var(--muted); }
 .empty { text-align: center; color: var(--muted); padding: 28px 16px; }
 .empty b { display: block; color: var(--fg); margin-bottom: 4px; font-size: 1.05rem; }
-.avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: italic 850 1.15rem var(--font-display); flex: none; }
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: italic 850 1.15rem var(--font-display); flex: none; }
 .avatar.big { width: 72px; height: 72px; font-size: 2rem; }
 .boost { box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border-radius: 18px; padding: 14px 16px; margin-bottom: 14px; }
 .boost .bi { width: 36px; height: 36px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
@@ -641,23 +642,23 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     ["Arme", [["scott-curls","S"],["bizepscurl-maschine","S"],["bayesian-curl","S"],["scott-hammer","S"],["ueberkopf-trizepsstrecken","S"],["french-press","S"],["sz-curls","A"],["kurzhantel-curls","A"],["schraegbank-curls","A"],["kabelcurls","A"],["hammercurls","A"],["trizepsdruecken-kabel","A"],["enges-bankdruecken","A"],["trizeps-kickbacks","A"]]],
     ["Beine", [["hackenschmidt","S"],["kniebeugen-smith","S"],["bulgarian-split-squats","S"],["abduktoren","S"],["ausfallschritte","S"],["hyperextensions","S"],["rumaenisches-kreuzheben","S"],["beinbeuger-liegend","S"],["beinpresse","A"],["beinstrecker","A"],["beinbeuger-sitzend","A"],["hip-thrust-maschine","A"],["hip-thrusts","A"],["step-ups","A"],["glute-kickback-maschine","A"],["kniebeugen-langhantel","S"],["frontkniebeugen","A"]]]
   ];
+  var STEF = ["brustpresse","latzug-breit","kabelrudern","beinpresse","beinbeuger-sitzend","hyperextensions","beinheben-haengend"];
   function vTier() {
     var g = S.tierG || "Brust", showSpine = !!S.tierSpine;
-    var h = '<header class="top"><div><div class="brand">Übungen</div><div class="date">Nur S- und A-Tier nach Jeff Nippard</div></div>' + profBtn() + "</header>";
-    h += '<div class="chips" style="margin-bottom:14px">' + TIERS.map(function (t) { return '<button class="chip" data-a="tierg" data-v="' + t[0] + '" aria-pressed="' + (g === t[0]) + '">' + t[0] + "</button>"; }).join("") + "</div>";
-    var grp = TIERS.find(function (t) { return t[0] === g; })[1], hidden = 0;
+    var h = '<header class="top"><div><div class="brand">Übungen</div></div>' + profBtn() + "</header>";
+    h += '<div class="chips" style="margin-bottom:14px">' + TIERS.map(function (t) { return '<button class="chip" data-a="tierg" data-v="' + t[0] + '" aria-pressed="' + (g === t[0]) + '">' + t[0] + "</button>"; }).join("") + '<button class="chip" data-a="tierg" data-v="Stef" aria-pressed="' + (g === "Stef") + '">Coach Stef</button></div>';
+    var grp = g === "Stef" ? STEF.map(function (id) { return [id, "S"]; }) : TIERS.find(function (t) { return t[0] === g; })[1], hidden = 0;
     var p = plan(), inPlan = {}; if (p) p.days.forEach(function (d) { d.items.forEach(function (it) { inPlan[it.ex] = true; }); });
     ["S", "A"].forEach(function (tier) {
       var rows = grp.filter(function (x) { if (x[1] !== tier) return false; if (!showSpine && HIGH_SPINE[x[0]]) { hidden++; return false; } return true; });
       if (!rows.length) return;
-      h += '<div class="section" style="margin-top:' + (tier === "S" ? 0 : 22) + 'px"><div class="tierh"><span class="tier ' + tier + '">' + tier + '</span><span class="eyebrow">' + (tier === "S" ? "Top-Wahl" : "Sehr gut") + '</span></div><div class="list">' + rows.map(function (x) {
+      h += '<div class="section" style="margin-top:' + (tier === "S" ? 0 : 22) + 'px">' + (g === "Stef" ? '<span class="eyebrow">Basis-Übungen von Coach Stef</span>' : '<div class="tierh"><span class="tier ' + tier + '">' + tier + '</span><span class="eyebrow">' + (tier === "S" ? "Top-Wahl" : "Sehr gut") + "</span></div>") + '<div class="list">' + rows.map(function (x) {
         var e = ex(x[0]);
-        return '<div class="li"><button data-a="exinfo" data-v="' + x[0] + '" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left">' + photo(x[0], "thumb") + '<span class="grow"><b>' + esc(e.n) + '</b><span class="s">' + esc(e.eq || e.m) + (inPlan[x[0]] ? " · im Plan" : "") + "</span></span></button>" +
+        return '<div class="li"><button data-a="exinfo" data-v="' + x[0] + '" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left">' + photo(x[0], "thumb") + '<span class="grow"><b>' + esc(e.n) + '</b><span class="s">' + esc(e.eq || e.m) + (g !== "Stef" && STEF.indexOf(x[0]) >= 0 ? " · Coach Stef" : "") + (inPlan[x[0]] ? " · im Plan" : "") + "</span></span></button>" +
           '<button class="addbtn' + (inPlan[x[0]] ? " ok" : "") + '" data-a="tieradd" data-v="' + x[0] + '" aria-label="' + esc(e.n) + ' zum Plan hinzufügen">' + ic(inPlan[x[0]] ? "check" : "plus", 20) + "</button></div>";
       }).join("") + "</div></div>";
     });
     if (hidden || showSpine) h += '<button class="freebtn" data-a="tierspine">' + (showSpine ? "Übungen mit hoher Rückenlast ausblenden" : hidden + " Übung" + (hidden > 1 ? "en" : "") + " mit hoher Rückenlast ausgeblendet · zeigen") + "</button>";
-    h += '<div class="small muted" style="margin-top:18px;text-align:center">Einordnung nach Jeff Nippards Rankings (Zusammenfassungen von BarBend, Fitness Volt, BOXROX). Abweichungen möglich.</div>';
     return h;
   }
 
@@ -705,8 +706,8 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       var prev = e.prev && e.prev[si];
       h += '<div class="vals"><div class="val"><div class="lab">' + wl + '</div><div class="ctl"><button data-a="wstep" data-v="-1" aria-label="weniger Gewicht">−</button><input class="big" id="bigw" inputmode="decimal" autocomplete="off" data-in="bw" value="' + esc(wv == null ? "" : kg(wv)) + '" placeholder="0"><button data-a="wstep" data-v="1" aria-label="mehr Gewicht">+</button></div></div>' +
         '<div class="val"><div class="lab">' + rl + '</div><div class="ctl"><button data-a="rstep" data-v="-1" aria-label="weniger">−</button><input class="big" id="bigr" inputmode="numeric" autocomplete="off" data-in="br" value="' + esc(rv == null ? "" : rv) + '" placeholder="0"><button data-a="rstep" data-v="1" aria-label="mehr">+</button></div></div></div>' +
-        '<div class="hint2">' + (e.up && si === 0 ? '<span class="up">+2,5 kg</span> · Letztes Mal alle Sätze geschafft' : prev ? "Letztes Mal: " + (prev.w ? kg(prev.w) + " kg × " : "") + prev.r : e.restart && si === 0 ? "Wiedereinstieg: ca. 65 % vom früheren Gewicht" : "") + "</div>" +
-        '<button class="cta" data-a="setok">' + ic("check", 20) + "Satz " + (si + 1) + " abschließen</button>";
+        '<div class="hint2">' + (e.up && si === 0 ? '<span class="up">+2,5 kg</span> · Letztes Mal alle Sätze geschafft' : prev ? "Letztes Mal: " + (prev.w ? kg(prev.w) + " kg × " : "") + prev.r : "") + "</div>" +
+        '<button class="cta" data-a="setok">' + ic("check", 20) + "Satz " + (si + 1) + " geschafft</button>";
     } else {
       var nx = a.entries.findIndex(function (x, i) { return i !== ci && x.sets.some(function (s) { return !s.done; }); });
       h += '<div class="allok"><b>Übung erledigt</b></div>' + (nx >= 0 ? '<button class="cta" data-a="cur" data-v="' + nx + '">Weiter: ' + esc(a.entries[nx].name) + "</button>" : '<button class="cta" data-a="finishask">' + ic("check", 20) + "Training abschließen</button>");
@@ -1159,7 +1160,17 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var dark = t === "dark" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
     var m = $("themecolor"); if (m) m.setAttribute("content", dark ? "#0E0F11" : "#F5F6F8");
   }
+  function fixNavGap() {
+    try {
+      var standalone = window.navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+      var gap = standalone && screen.height - window.innerHeight > 20 && screen.height - window.innerHeight < 120;
+      document.documentElement.classList.toggle("navgap", !!gap);
+      document.documentElement.style.setProperty("--navpad", gap ? "4px" : "env(safe-area-inset-bottom, 0px)");
+    } catch (e) {}
+  }
+  window.addEventListener("resize", fixNavGap);
   function boot() {
+    fixNavGap();
     S.plans = get("plans", null); if (!S.plans) { S.plans = clone(window.DEFAULT_PLANS); savePlans(); }
     S.custom = get("custom", []); S.settings = Object.assign({ rest: 90, weekGoal: 5, budget: 50 }, get("settings", {}));
     S.workouts = get("workouts", []); S.body = get("body", []); S.notes = get("notes", {}); S.lastBackup = get("lastBackup", null); S.profile = Object.assign({ name: "Arne", goal: "Fitter und muskulöser werden" }, get("profile", {}));
