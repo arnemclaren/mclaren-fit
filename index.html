@@ -45,6 +45,9 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
 [hidden] { display: none !important; }
+.vh { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
+label.cta, label.ghostbtn, label.li { cursor: pointer; }
+.field textarea { min-height: 140px; resize: vertical; font-size: 14px; font-family: ui-monospace, monospace; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 400 16px/1.45 var(--font-body); -webkit-tap-highlight-color: transparent;
   padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) calc(96px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 #app { max-width: 600px; margin-inline: auto; }
@@ -181,7 +184,7 @@ nav.tabs button[aria-current="page"] { color: var(--accent); }
 .chip { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; background: var(--surface); font-weight: 600; font-size: .88rem; }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .stepper { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-radius: 14px; padding: 6px 6px 6px 14px; }
-.stepper .v { font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; min-width: 3.5ch; text-align: center; }
+.stepper .v { font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; min-width: 5ch; white-space: nowrap; text-align: center; }
 .stepper button { width: 44px; height: 44px; border-radius: 10px; background: var(--raised); font-size: 1.3rem; font-weight: 700; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label { font-size: .8rem; font-weight: 600; color: var(--muted); }
@@ -239,7 +242,7 @@ nav.tabs button[aria-current="page"] { color: var(--accent); }
 <nav class="tabs" id="tabs" aria-label="Bereiche"><div class="in" id="tabsin"></div></nav>
 <div id="sheet"></div>
 <div id="toast" class="toast" hidden role="status"></div>
-<input type="file" id="importfile" accept="application/json,.json" hidden>
+<input type="file" id="importfile" class="vh" tabindex="-1" aria-hidden="true">
 <script>window.EXERCISES = [
   // Brust
   {id:"bankdruecken-langhantel", n:"Bankdrücken", m:"Brust", eq:"Langhantel", t:"kraft"},
@@ -429,7 +432,8 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   function get(key, def) { try { var v = localStorage.getItem("fit_" + key); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
   function savePlans() { put("plans", S.plans); }
   var activeT = null;
-  function saveActive(now) { clearTimeout(activeT); if (now) put("active", S.active); else activeT = setTimeout(function () { put("active", S.active); }, 500); }
+  function saveActive() { put("active", S.active); }
+  window.addEventListener("pagehide", function () { if (S.active) put("active", S.active); });
 
   /* ---------- Ableitungen ---------- */
   function plan() { var l = S.plans.list; return l.find(function (p) { return p.id === S.plans.active; }) || l[0] || null; }
@@ -464,7 +468,8 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var tr = S.active && S.tab === "training";
     document.body.classList.toggle("training", !!tr);
     $("tabs").hidden = !!tr;
-    $("view").innerHTML = tr ? vTraining() : S.tab === "heute" ? vHeute() : S.tab === "fortschritt" ? vProgress() : vPlan();
+    try { $("view").innerHTML = tr ? vTraining() : S.tab === "heute" ? vHeute() : S.tab === "fortschritt" ? vProgress() : vPlan(); }
+    catch (e) { $("view").innerHTML = '<div class="list empty" style="margin-top:40px"><b>Da ist etwas schiefgelaufen</b>Lade die App neu. Deine Daten sind gespeichert.<div style="margin-top:12px" class="small muted">' + esc(e.message) + "</div></div>"; }
     $("tabsin").innerHTML = [["heute","Heute","home"],["fortschritt","Fortschritt","chart"],["plan","Plan","plan"]].map(function (t) {
       return '<button data-a="tab" data-v="' + t[0] + '"' + (S.tab === t[0] ? ' aria-current="page"' : "") + ">" + ic(t[2]) + t[1] + "</button>";
     }).join("");
@@ -481,6 +486,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     el.innerHTML = "";
   }
 
+  function importBtn(cls, inner) { return '<label for="importfile" class="' + cls + '" role="button">' + inner + "</label>"; }
   function profBtn() { return '<button class="avatar" data-a="settings" aria-label="Profil und Einstellungen">' + esc((S.profile.name || "?").charAt(0).toUpperCase()) + "</button>"; }
   function weekCount(off) { var a = weekStart(Date.now()).getTime() - off * 7 * 864e5, b = a + 7 * 864e5; return S.workouts.filter(function (w) { return w.start >= a && w.start < b; }).length; }
   function streakWeeks() { var st = 0, need = Math.min(3, S.settings.weekGoal); for (var i = 0; i < 104; i++) { var c = weekCount(i); if (c >= need) st++; else if (i > 0) break; } return st; }
@@ -507,7 +513,8 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var h = '<header class="head"><div><div class="display" style="font-size:.95rem;color:var(--accent);letter-spacing:.02em;margin-bottom:6px">McLaren-Fit</div><div class="eyebrow">' + now.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" }) + '</div><h1 class="display">Heute</h1></div>' + profBtn() + '</header>' + boost();
     if (S.workouts.length >= 3 && (!S.lastBackup || Date.now() - S.lastBackup > 14 * 864e5))
       h += '<button class="li list" style="margin-bottom:12px" data-a="export"><span class="grow small">Letztes Backup über 2 Wochen her. Jetzt sichern.</span><span class="chev">' + ic("right", 18) + "</span></button>";
-    if (!p || !d) return h + '<div class="list empty"><b>Willkommen bei McLaren-Fit</b>Lade deinen Plan aus einer Backup-Datei oder leg ihn selbst an.<div class="stack" style="margin-top:16px"><button class="cta" data-a="import">' + ic("down", 18) + 'Plan aus Datei laden</button><button class="ghostbtn" data-a="tab" data-v="plan">Selbst anlegen</button></div></div>';
+    if (!p) return h + '<div class="list empty"><b>Willkommen bei McLaren-Fit</b>Lade deinen Plan aus einer Datei oder leg ihn selbst an.<div class="stack" style="margin-top:16px">' + importBtn("cta", ic("down", 18) + "Plan aus Datei laden") + '<button class="ghostbtn" data-a="planadd">Selbst anlegen</button></div></div>';
+    if (!d) return h + '<div class="list empty"><b>„' + esc(p.name) + '“ hat noch keine Trainingstage</b>Leg den ersten Tag an oder lade deinen Plan aus einer Datei.<div class="stack" style="margin-top:16px"><button class="cta" data-a="dayadd">' + ic("plus", 18) + "Trainingstag anlegen</button>" + importBtn("ghostbtn", "Plan aus Datei laden") + "</div></div>";
     var trainedToday = S.workouts.some(function (w) { return sameDay(w.start, Date.now()); });
     h += '<section class="hero ph-wrap" style="position:relative" data-a="preview" data-v="' + d.id + '">' + photo(d.items[0] && d.items[0].ex, "", true) +
       '<div class="eyebrow">' + (trainedToday ? "Als Nächstes" : d.wd === now.getDay() ? "Dein Training heute" : "Als Nächstes") + '</div><h2 class="display">' + esc(d.name) + '</h2>' +
@@ -627,7 +634,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   function vPlan() {
     var p = plan();
     var h = '<header class="head"><h1 class="display">' + esc(p ? p.name : "Plan") + '</h1>' + profBtn() + "</header>";
-    if (!p) return h + '<div class="list empty"><b>Noch kein Plan</b><div class="stack" style="margin-top:14px"><button class="cta" data-a="planadd">' + ic("plus", 18) + 'Plan anlegen</button><button class="ghostbtn" data-a="import">Plan aus Datei laden</button></div></div>';
+    if (!p) return h + '<div class="list empty"><b>Noch kein Plan</b><div class="stack" style="margin-top:14px"><button class="cta" data-a="planadd">' + ic("plus", 18) + 'Plan anlegen</button>' + importBtn("ghostbtn", "Plan aus Datei laden") + '</div></div>';
     h += '<div class="list">' + p.days.map(function (d) {
       var mm = dayMin(d);
       return '<button class="li" data-a="dayedit" data-v="' + d.id + '">' + photo(d.items[0] && d.items[0].ex, "thumb") + '<span class="grow"><b>' + esc(d.name) + '</b><span class="s">' + (d.wd != null ? WDL[d.wd] + " · " : "") + d.items.length + " Übungen · " +
@@ -645,16 +652,19 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   function renderSheet() {
     var s = S.sheet, el = $("sheet");
     if (!s) { el.innerHTML = ""; document.body.style.overflow = ""; return; }
-    var f = { picker: shPicker, exinfo: shExInfo, day: shDay, item: shItem, workout: shWorkout, menu: shMenu, text: shText, custom: shCustom, settings: shSettings, finish: shFinish, preview: shPreview }[s.type];
-    el.innerHTML = '<div class="sbg" data-a="sbg"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>' + f(s) + "</div></div>";
+    var f = { paste: shPaste, picker: shPicker, exinfo: shExInfo, day: shDay, item: shItem, workout: shWorkout, menu: shMenu, text: shText, custom: shCustom, settings: shSettings, finish: shFinish, preview: shPreview }[s.type];
+    var inner; try { inner = f(s); } catch (e) { S.sheet = null; el.innerHTML = ""; document.body.style.overflow = ""; return; }
+    if (!inner) { S.sheet = null; el.innerHTML = ""; document.body.style.overflow = ""; return; }
+    el.innerHTML = '<div class="sbg" data-a="sbg"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>' + inner + "</div></div>";
     document.body.style.overflow = "hidden";
   }
   function head(title, extra) { return '<div class="row" style="margin-bottom:14px"><h2 class="display grow">' + esc(title) + "</h2>" + (extra || "") + '<button class="iconbtn" data-a="close" aria-label="Schließen">' + ic("close", 20) + "</button></div>"; }
+  function shPaste() { return head("Als Text einfügen") + '<div class="stack"><span class="small muted">Öffne die Backup-Datei, markiere alles, kopiere es und füge es hier ein.</span><div class="field"><label for="pastetx">Inhalt der Datei</label><textarea id="pastetx" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea></div><button class="cta" data-a="pastesave">Laden</button></div>'; }
   function shMenu(s) { return '<div class="list menu">' + s.items.map(function (it, i) { return '<button class="li' + (it.danger ? " danger" : "") + '" data-a="menupick" data-v="' + i + '">' + esc(it.label) + "</button>"; }).join("") + '</div><button class="ghostbtn" style="width:100%;margin-top:10px" data-a="close">Abbrechen</button>'; }
   function shText(s) { return head(s.title) + '<div class="stack"><div class="field"><label for="tx">' + esc(s.label) + '</label><input id="tx" ' + (s.num ? 'inputmode="decimal"' : "") + ' value="' + esc(s.value || "") + '" placeholder="' + esc(s.ph || "") + '" autocomplete="off"></div><button class="cta" data-a="textsave">Speichern</button></div>'; }
   function pickList(s) {
     var q = S.q.trim().toLowerCase(), all = (window.EXERCISES || []).concat(S.custom);
-    var l = all.filter(function (e) { return (!S.mf || e.m === S.mf) && (!q || (e.n + " " + e.m + " " + (e.eq || "")).toLowerCase().indexOf(q) >= 0) && e.id !== s.swapOf; });
+    var l = all.filter(function (e) { return (q || !S.mf || e.m === S.mf) && (!q || (e.n + " " + e.m + " " + (e.eq || "")).toLowerCase().indexOf(q) >= 0) && e.id !== s.swapOf; });
     if (s.swapOf) { var mg = ex(s.swapOf).m; l.sort(function (a, b) { return (b.m === mg) - (a.m === mg) || (HIGH_SPINE[a.id] ? 1 : 0) - (HIGH_SPINE[b.id] ? 1 : 0); }); }
     if (!l.length) return '<div class="empty"><b>Nichts gefunden</b>Leg sie unten als eigene Übung an.</div>';
     return l.slice(0, 80).map(function (e) { return '<button class="li" data-a="picked" data-v="' + esc(e.id) + '">' + photo(e.id, "thumb") + '<span class="grow"><b>' + esc(e.n) + '</b><span class="s">' + esc(e.m) + (e.eq ? " · " + esc(e.eq) : "") + "</span></span>" + (HIGH_SPINE[e.id] ? '<span class="tag">Rücken</span>' : "") + "</button>"; }).join("");
@@ -688,7 +698,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   function findDay(id) { var p = plan(); return p ? p.days.find(function (d) { return d.id === id; }) : null; }
   function shPreview(s) {
     var d = findDay(s.did); if (!d) return "";
-    return '<div class="full"><div class="hero" style="border-radius:0;min-height:240px;position:relative">' + photo(d.items[0] && d.items[0].ex, "", true) + '<div class="eyebrow">' + (d.wd != null ? WDL[d.wd] : "Training") + '</div><h2 class="display">' + esc(d.name) + '</h2><div class="meta">' + d.items.length + " Übungen · ca. " + dayMin(d) + " Min.</div></div></div>" +
+    return '<div class="full"><div class="hero" style="border-radius:0;min-height:240px;position:relative"><button class="iconbtn" data-a="close" aria-label="Schließen" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,.45);color:#fff">' + ic("close", 20) + "</button>" + photo(d.items[0] && d.items[0].ex, "", true) + '<div class="eyebrow">' + (d.wd != null ? WDL[d.wd] : "Training") + '</div><h2 class="display">' + esc(d.name) + '</h2><div class="meta">' + d.items.length + " Übungen · ca. " + dayMin(d) + " Min.</div></div></div>" +
       '<div class="list" style="margin-top:14px">' + d.items.map(function (it) { return '<button class="li" data-a="exinfo" data-v="' + esc(it.ex) + '">' + photo(it.ex, "thumb") + '<span class="grow"><b>' + esc(itemName(it)) + '</b><span class="s">' + itemLine(it) + '</span></span><span class="chev">' + ic("right", 18) + "</span></button>"; }).join("") + "</div>" +
       (S.active ? "" : '<button class="cta" style="margin-top:14px" data-a="start" data-v="' + d.id + '">' + ic("play", 18) + "Training starten</button>") +
       '<button class="ghostbtn" style="width:100%;margin-top:10px" data-a="dayedit" data-v="' + d.id + '">Tag bearbeiten</button>';
@@ -716,7 +726,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var a = S.active, sets = 0, vol = 0;
     a.entries.forEach(function (e) { e.sets.forEach(function (s) { if (s.done) { sets++; vol += (n(s.w) || 0) * (n(s.r) || 0); } }); });
     var open = a.entries.reduce(function (t, e) { return t + e.sets.filter(function (s) { return !s.done; }).length; }, 0);
-    return head("Training beenden") + '<div class="tiles" style="margin-bottom:14px"><div class="tile"><div class="eyebrow">Dauer</div><div class="v">' + Math.round((Date.now() - a.start) / 60000) + '<span class="small"> Min</span></div></div><div class="tile"><div class="eyebrow">Sätze</div><div class="v">' + sets + '</div></div><div class="tile"><div class="eyebrow">Volumen</div><div class="v">' + Math.round(vol / 100) / 10 + '<span class="small"> t</span></div></div></div>' +
+    return head("Training beenden") + '<div class="tiles" style="margin-bottom:14px"><div class="tile"><div class="eyebrow">Dauer</div><div class="v">' + Math.round((Date.now() - a.start) / 60000) + '<span class="small"> Min</span></div></div><div class="tile"><div class="eyebrow">Sätze</div><div class="v">' + sets + '</div></div><div class="tile"><div class="eyebrow">Volumen</div><div class="v">' + kg(Math.round(vol / 100) / 10) + '<span class="small"> t</span></div></div></div>' +
       (open ? '<div class="small muted" style="margin-bottom:12px">' + open + " Sätze nicht abgehakt. Die werden nicht gespeichert.</div>" : "") +
       '<button class="cta" data-a="finish">Speichern</button>' + (S.confirm === "discard" ? '<div class="row" style="margin-top:10px"><button class="ghostbtn danger grow" data-a="discard">Wirklich verwerfen</button><button class="ghostbtn" data-a="noconfirm">Nein</button></div>' : '<button class="ghostbtn danger" style="width:100%;margin-top:10px" data-a="discardask">Training verwerfen</button>');
   }
@@ -748,9 +758,10 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       (first ? "Dabei seit " + new Date(first).toLocaleDateString("de-DE", { month: "long", year: "numeric" }) + " · " + S.workouts.length + " Trainings" : "Dein erstes Training wartet") + "</span></div></div>" +
       '<div class="list">' + row("user", "Name", esc(S.profile.name), "pname") + row("target", "Ziel", esc(S.profile.goal), "pgoal") + row("scale", "Körpergewicht", bw ? kg(bw.kg) + " kg · " + fmtDate(bw.t) : "Noch nicht eingetragen", "bwadd") + "</div>" +
       '<div class="section"><span class="eyebrow">Training</span><div class="stack">' + stepper("Standard-Pause", "set-rest", mmss(st.rest), 15) + stepper("Trainings pro Woche", "set-weekGoal", st.weekGoal, 1) + stepper("Zeit pro Training", "set-budget", st.budget, 5, " Min") + "</div></div>" +
-      '<div class="section"><span class="eyebrow">Pläne</span><div class="list">' + row("plan", "Plan umbenennen", esc((plan() || {}).name || ""), "planrename") + row("plus", "Neuen Plan anlegen", "", "planadd") + "</div></div>" +
+      '<div class="section"><span class="eyebrow">Pläne</span><div class="list">' + row("plan", "Plan umbenennen", esc((plan() || {}).name || ""), "planrename") + row("plus", "Neuen Plan anlegen", "", "planadd") + (plan() ? '<button class="li danger" data-a="plandelask"><span class="lic">' + ic("close", 18) + '</span><span class="grow"><b>Plan „' + esc(plan().name) + '“ löschen</b></span></button>' : "") + "</div>" +
+      (S.confirm === "plandel" ? '<div class="row" style="margin-top:10px"><button class="ghostbtn danger grow" data-a="plandel">Wirklich löschen</button><button class="ghostbtn" data-a="noconfirm">Nein</button></div>' : "") + "</div>" +
       '<div class="section"><span class="eyebrow">Daten</span><span class="small muted">Deine Daten liegen nur auf diesem iPhone. Sichere sie regelmäßig, z. B. in iCloud Drive. ' + (S.lastBackup ? "Letztes Backup: " + fmtDate(S.lastBackup) + "." : "Noch kein Backup.") + "</span>" +
-      '<div class="list">' + row("box", "Backup speichern", "", "export") + row("down", "Backup laden", "", "import") + "</div>" +
+      '<div class="list">' + row("box", "Backup speichern", "", "export") + '<label for="importfile" class="li" role="button"><span class="lic">' + ic("down", 18) + '</span><span class="grow"><b>Backup oder Plan laden</b><span class="s">Datei auswählen</span></span><span class="chev">' + ic("right", 18) + "</span></label>" + row("plan", "Als Text einfügen", "Falls die Datei sich nicht wählen lässt", "paste") + "</div>" +
       (S.confirm === "import" && S.pendingImport ? '<div class="panel stack"><span class="small"><b>Backup vom ' + fmtDate(S.pendingImport.date) + "</b> mit " + (S.pendingImport.workouts || []).length + ' Trainings laden? Alle aktuellen Daten werden ersetzt.</span><div class="row"><button class="ghostbtn danger grow" data-a="importok">Ersetzen</button><button class="ghostbtn" data-a="noconfirm">Abbrechen</button></div></div>' : "") +
       '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
   }
@@ -795,7 +806,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var a = S.active, entries = a.entries.map(function (e) { return { ex: e.ex, name: e.name, sets: e.sets.filter(function (s) { return s.done; }).map(function (s) { return { w: n(s.w) || 0, r: n(s.r) || 0 }; }) }; }).filter(function (e) { return e.sets.length; });
     var prs = []; entries.forEach(function (e) { var b = bestFor(e.ex, a.id), now = e.sets.reduce(function (m, s) { return Math.max(m, e1rm(s.w, s.r)); }, 0); if (b && now > b + .01) prs.push(e.name); });
     var w = { id: a.id, planId: a.planId, dayId: a.dayId, dayName: a.dayName, mode: a.mode || "voll", start: a.start, end: Date.now(), entries: entries, prs: prs };
-    S.active = null; S.timer = null; keepAwake(false); saveActive(true);
+    S.active = null; S.timer = null; S.sheet = null; S.confirm = null; keepAwake(false); saveActive(true);
     if (entries.length) { S.workouts.unshift(w); put("workouts", S.workouts); S.tab = "fortschritt"; render(); open({ type: "workout", id: w.id, fresh: true }); }
     else { S.tab = "heute"; shut(); render(); toast("Kein Satz abgehakt, nichts gespeichert"); }
   }
@@ -867,6 +878,10 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       case "settings": open({ type: "settings" }); break;
       case "export": exportData(); break;
       case "import": $("importfile").click(); break;
+      case "paste": open({ type: "paste", back: { type: "settings" } }); break;
+      case "pastesave": var txt = $("pastetx").value.trim(); if (!readBackup(txt)) toast("Text nicht erkannt. Bitte den ganzen Dateiinhalt einfügen."); break;
+      case "plandelask": S.confirm = "plandel"; renderSheet(); break;
+      case "plandel": var pdel = plan(); S.plans.list = S.plans.list.filter(function (x) { return x !== pdel; }); S.plans.active = (S.plans.list[0] || {}).id || null; savePlans(); shut(); render(); toast("Plan gelöscht"); break;
       case "importok": applyImport(); break;
       case "planact": S.plans.active = v; savePlans(); render(); break;
       case "planadd": textCb = function (val) { var p = { id: uid(), name: val || "Neuer Plan", days: [] }; S.plans.list.push(p); S.plans.active = p.id; savePlans(); shut(); render(); }; open({ type: "text", title: "Neuer Plan", label: "Name" }); break;
@@ -893,7 +908,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
         pickCb = function (id) { var x = findDay(c2.did).items[c2.i]; x.ex = id; x.n = ""; x.wOld = null; x.u = ""; savePlans(); render(); open({ type: "item", did: c2.did, i: c2.i }); }; open({ type: "picker", swapOf: cur.ex, mf: ex(cur.ex).m }); break;
       case "itemup": var arr = findDay(s.did).items, tmp = arr[s.i - 1]; arr[s.i - 1] = arr[s.i]; arr[s.i] = tmp; savePlans(); render(); open({ type: "item", did: s.did, i: s.i - 1 }); break;
       case "itemrename": var c3 = { did: s.did, i: s.i }, x3 = findDay(s.did).items[s.i]; textCb = function (val) { x3.n = val; savePlans(); render(); open({ type: "item", did: c3.did, i: c3.i }); }; open({ type: "text", title: "Anzeigename", label: "Name", value: x3.n || "", ph: ex(x3.ex).n }); break;
-      case "itemdel": findDay(s.did).items.splice(s.i, 1); savePlans(); render(); open({ type: "day", did: s.did }); break;
+      case "itemdel": findDay(s.did).items.splice(s.i, 1); savePlans(); open({ type: "day", did: s.did }); render(); toast("Übung entfernt"); break;
     }
   });
   function noteFor(id) { textCb = function (val) { if (val) S.notes[id] = val; else delete S.notes[id]; put("notes", S.notes); shut(); render(); }; open({ type: "text", title: "Notiz", label: ex(id).n, value: S.notes[id] || "", ph: "z. B. Sitzhöhe 4, Griff eng" }); }
@@ -906,7 +921,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
 
   /* ---------- Backup ---------- */
   function exportData() {
-    var data = { app: "trainingslog", v: 2, date: new Date().toISOString(), plans: S.plans, custom: S.custom, settings: S.settings, workouts: S.workouts, body: S.body, notes: S.notes, profile: S.profile };
+    var data = { app: "mclaren-fit", v: 2, date: new Date().toISOString(), plans: S.plans, custom: S.custom, settings: S.settings, workouts: S.workouts, body: S.body, notes: S.notes, profile: S.profile };
     var name = "mclaren-fit-backup-" + new Date().toISOString().slice(0, 10) + ".json", blob = new Blob([JSON.stringify(data)], { type: "application/json" }), file = null;
     try { file = new File([blob], name, { type: "application/json" }); } catch (e) {}
     var done = function () { S.lastBackup = Date.now(); put("lastBackup", S.lastBackup); render(); toast("Backup gespeichert"); };
@@ -915,14 +930,22 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   }
   $("importfile").addEventListener("change", function (ev) {
     var f = ev.target.files[0]; if (!f) return; var r = new FileReader();
-    r.onload = function () { try { var d = JSON.parse(r.result); if (d.app !== "trainingslog" || !d.plans) throw 0; S.pendingImport = d; if (!S.sheet || S.sheet.type !== "settings") open({ type: "settings" }); S.confirm = "import"; renderSheet(); } catch (e) { toast("Das ist kein Trainingslog-Backup."); } ev.target.value = ""; };
+    r.onload = function () { if (!readBackup(String(r.result || ""))) toast("Diese Datei ist kein McLaren-Fit-Backup."); ev.target.value = ""; };
+    r.onerror = function () { toast("Datei konnte nicht gelesen werden."); ev.target.value = ""; };
     r.readAsText(f);
   });
+  function readBackup(txt) {
+    var d; try { d = JSON.parse(txt.replace(/^\uFEFF/, "")); } catch (e) { return false; }
+    if (!d || !d.plans || !Array.isArray(d.plans.list)) return false;
+    S.pendingImport = d;
+    if (!S.workouts.length) { applyImport(); return true; }  /* noch keine eigenen Trainings: nichts zu verlieren, direkt laden */
+    open({ type: "settings" }); S.confirm = "import"; renderSheet(); return true;
+  }
   function applyImport() {
     var d = S.pendingImport; if (!d) return;
-    S.plans = d.plans; S.custom = d.custom || []; S.settings = Object.assign({ rest: 90, weekGoal: 5, budget: 50 }, d.settings || {}); S.workouts = d.workouts || []; S.body = d.body || []; S.notes = d.notes || {}; S.profile = d.profile || S.profile;
+    S.plans = d.plans; if (!S.plans.active && S.plans.list[0]) S.plans.active = S.plans.list[0].id; S.custom = d.custom || []; S.settings = Object.assign({ rest: 90, weekGoal: 5, budget: 50 }, d.settings || {}); S.workouts = d.workouts || []; S.body = d.body || []; S.notes = d.notes || {}; S.profile = d.profile || S.profile;
     ["plans","custom","settings","workouts","body","notes","profile"].forEach(function (k) { put(k, S[k]); });
-    S.pendingImport = null; shut(); render(); toast("Backup geladen");
+    S.pendingImport = null; S.tab = "heute"; shut(); render(); toast("Geladen: " + S.plans.list.length + (S.plans.list.length === 1 ? " Plan" : " Pläne") + ", " + S.workouts.length + " Trainings");
   }
 
   /* ---------- Start ---------- */
