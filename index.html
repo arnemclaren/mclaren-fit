@@ -977,6 +977,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       (open ? '<div class="small muted" style="margin-bottom:12px">' + open + " Sätze nicht abgehakt. Die werden nicht gespeichert.</div>" : "") +
       '<button class="cta" data-a="finish">Speichern</button>' + (S.confirm === "discard" ? '<div class="row" style="margin-top:10px"><button class="ghostbtn danger grow" data-a="discard">Wirklich verwerfen</button><button class="ghostbtn" data-a="noconfirm">Nein</button></div>' : '<button class="ghostbtn danger" style="width:100%;margin-top:10px" data-a="discardask">Training verwerfen</button>');
   }
+  function isoDay(t) { var d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function shWorkout(s) {
     var w = S.workouts.find(function (x) { return x.id === s.id; }); if (!w) return "";
     var vol = w.entries.reduce(function (t, e) { return t + e.sets.reduce(function (u, k) { return u + (k.w || 0) * (k.r || 0); }, 0); }, 0);
@@ -994,6 +995,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     return cel + head(w.dayName, w.mode === "kompakt" ? '<span class="badge">' + ic("leaf", 14) + "Kompakt</span>" : "") + '<div class="small muted" style="margin:-6px 0 12px">' + fmtDate(w.start) + " · " + Math.round((w.end - w.start) / 60000) + " Min. · " + Math.round(vol).toLocaleString("de-DE") + " kg bewegt</div>" +
       (!s.fresh && w.prs && w.prs.length ? '<div class="panel small" style="margin-bottom:12px"><span class="tag good">Neuer Bestwert</span> ' + w.prs.map(esc).join(", ") + "</div>" : "") +
       '<div class="list">' + w.entries.map(function (e) { return '<div class="li">' + photo(e.ex, "thumb") + '<span class="grow"><b>' + esc(e.name) + '</b><span class="s">' + e.sets.map(function (k) { return (k.w ? kg(k.w) + "×" : "") + k.r; }).join(" · ") + "</span></span></div>"; }).join("") + "</div>" +
+      '<div class="field" style="margin-top:12px"><label for="wdate">Datum</label><input id="wdate" type="date" data-in="wdate" data-v="' + esc(w.id) + '" value="' + isoDay(w.start) + '"></div>' +
       (S.confirm === "wdel" ? '<div class="row" style="margin-top:12px"><button class="ghostbtn danger grow" data-a="wdel" data-v="' + w.id + '">Wirklich löschen</button><button class="ghostbtn" data-a="noconfirm">Nein</button></div>' : '<button class="ghostbtn danger" style="width:100%;margin-top:12px" data-a="wdelask">Training löschen</button>');
   }
   function shSettings() {
@@ -1013,7 +1015,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       '<div class="section"><span class="eyebrow">Daten</span><span class="small muted">Deine Daten liegen nur auf diesem iPhone. Sichere sie regelmäßig, z. B. in iCloud Drive. ' + (S.lastBackup ? "Letztes Backup: " + fmtDate(S.lastBackup) + "." : "Noch kein Backup.") + "</span>" +
       '<div class="list">' + row("box", "Backup speichern", "", "export") + '<label for="importfile" class="li" role="button"><span class="lic">' + ic("down", 18) + '</span><span class="grow"><b>Backup oder Plan laden</b><span class="s">Datei auswählen</span></span><span class="chev">' + ic("right", 18) + "</span></label>" + row("plan", "Als Text einfügen", "Falls die Datei sich nicht wählen lässt", "paste") + "</div>" +
       (S.confirm === "import" && S.pendingImport ? '<div class="panel stack"><span class="small"><b>Backup vom ' + fmtDate(S.pendingImport.date) + "</b> mit " + (S.pendingImport.workouts || []).length + ' Trainings laden? Alle aktuellen Daten werden ersetzt.</span><div class="row"><button class="ghostbtn danger grow" data-a="importok">Ersetzen</button><button class="ghostbtn" data-a="noconfirm">Abbrechen</button></div></div>' : "") +
-      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 10<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
+      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 11<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
   }
 
   /* ---------- Pause & Uhr ---------- */
@@ -1057,12 +1059,17 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     S.active = { id: uid(), planId: d ? p.id : null, dayId: d ? d.id : null, dayName: d ? d.name : "Freies Training", mode: mode || "voll", start: Date.now(), cur: -1, warm: { done: [] }, entries: items.map(entry) };
     S.tab = "training"; S.timer = null; saveActive(true); keepAwake(true); unlock(); shut(); render(); window.scrollTo(0, 0);
   }
-  function finish() {
-    var a = S.active, entries = a.entries.map(function (e) { return { ex: e.ex, name: e.name, sets: e.sets.filter(function (s) { return s.done; }).map(function (s) { return { w: n(s.w) || 0, r: n(s.r) || 0 }; }) }; }).filter(function (e) { return e.sets.length; });
+  function sortWorkouts() { S.workouts.sort(function (x, y) { return y.start - x.start; }); }
+  function setTimes(a) { var t = []; a.entries.forEach(function (e) { e.sets.forEach(function (x) { if (x.done && x.at) t.push(x.at); }); }); return t; }
+  function finish(quiet) {
+    var a = S.active, times = setTimes(a), entries = a.entries.map(function (e) { return { ex: e.ex, name: e.name, sets: e.sets.filter(function (s) { return s.done; }).map(function (s) { return { w: n(s.w) || 0, r: n(s.r) || 0 }; }) }; }).filter(function (e) { return e.sets.length; });
     var prs = []; entries.forEach(function (e) { var b = bestFor(e.ex, a.id), now = e.sets.reduce(function (m, s) { return Math.max(m, e1rm(s.w, s.r)); }, 0); if (b && now > b + .01) prs.push(e.name); });
-    var w = { id: a.id, planId: a.planId, dayId: a.dayId, dayName: a.dayName, mode: a.mode || "voll", start: a.start, end: Date.now(), entries: entries, prs: prs };
+    var w = { id: a.id, planId: a.planId, dayId: a.dayId, dayName: a.dayName, mode: a.mode || "voll", start: times.length ? Math.min.apply(null, times) - 60000 : a.start, end: times.length ? Math.max.apply(null, times) : Date.now(), entries: entries, prs: prs };
+    if (w.end - w.start > 4 * 3600e3) w.start = w.end - 3600e3;
     S.active = null; S.timer = null; S.sheet = null; S.confirm = null; keepAwake(false); saveActive(true);
-    if (entries.length) { S.workouts.unshift(w); put("workouts", S.workouts); S.tab = "fortschritt"; render(); open({ type: "workout", id: w.id, fresh: true }); }
+    if (entries.length) { S.workouts.unshift(w); sortWorkouts(); put("workouts", S.workouts);
+      if (quiet) { S.tab = "heute"; render(); toast("Offenes Training vom " + fmtDate(w.start) + " gespeichert"); return; }
+      S.tab = "fortschritt"; render(); open({ type: "workout", id: w.id, fresh: true }); }
     else { S.tab = "heute"; shut(); render(); toast("Kein Satz abgehakt, nichts gespeichert"); }
   }
 
@@ -1100,7 +1107,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       case "setok":
         var fe = A.entries[curIndex()]; if (!fe) break; var fi = fe.sets.findIndex(function (x) { return !x.done; }); if (fi < 0) break;
         var fs = fe.sets[fi], fw = n(fs.w), fr = n(fs.r);
-        fs.w = fw == null ? defW(fe, fi) : fw; fs.r = fr == null ? defR(fe, fi) : fr; fs.done = true;
+        fs.w = fw == null ? defW(fe, fi) : fw; fs.r = fr == null ? defR(fe, fi) : fr; fs.done = true; fs.at = Date.now();
         if (fs.w != null) { fe.pw = fs.w; /* geändertes Gewicht für die folgenden Sätze übernehmen, wenn es vom Vorschlag abweicht */
           if (fw != null) for (var nn = fi + 1; nn < fe.sets.length; nn++) if (!fe.sets[nn].done && fe.sets[nn].w == null) fe.sets[nn].tw = fs.w; }
         var restLeft = A.entries.some(function (x) { return x.sets.some(function (y) { return !y.done; }); });
@@ -1114,7 +1121,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
         var e0 = A.entries[ei], st = e0.sets[si];
         if (!st.done) {
           var wv = n(st.w), rv = n(st.r);
-          st.w = wv == null ? e0.pw : wv; st.r = rv == null ? e0.pr : rv; st.done = true;
+          st.w = wv == null ? e0.pw : wv; st.r = rv == null ? e0.pr : rv; st.done = true; st.at = Date.now();
           if (st.w != null) e0.pw = st.w;
           var last = ei === A.entries.length - 1 && e0.sets.every(function (x) { return x.done; });
           if (!last) startRest(e0.rest); else { S.timer = null; }
@@ -1189,7 +1196,11 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       case "plandel": var pdel = plan(); S.plans.list = S.plans.list.filter(function (x) { return x !== pdel; }); S.plans.active = (S.plans.list[0] || {}).id || null; savePlans(); shut(); render(); toast("Plan gelöscht"); break;
       case "importok": applyImport(); break;
       case "planact": S.plans.active = v; savePlans(); render(); break;
-      case "planadd": textCb = function (val) { var p = { id: uid(), name: val || "Neuer Plan", days: [] }; S.plans.list.push(p); S.plans.active = p.id; savePlans(); shut(); render(); }; open({ type: "text", title: "Neuer Plan", label: "Name" }); break;
+      case "planadd": menu([
+          { label: "Vorlage: Push / Pull / Beine / Oberkörper / Beine", fn: function () { addTemplate(); } },
+          { label: "Leerer Plan", fn: function () { newEmptyPlan(); } }
+        ]); break;
+      case "planaddempty": textCb = function (val) { var p = { id: uid(), name: val || "Neuer Plan", days: [] }; S.plans.list.push(p); S.plans.active = p.id; savePlans(); shut(); render(); }; open({ type: "text", title: "Neuer Plan", label: "Name" }); break;
       case "planrename": var pp = plan(); textCb = function (val) { if (val) pp.name = val; savePlans(); shut(); render(); }; open({ type: "text", title: "Plan umbenennen", label: "Name", value: pp.name }); break;
       case "dayadd": textCb = function (val) { var nd = { id: uid(), name: val || "Neuer Tag", wd: null, items: [] }; plan().days.push(nd); savePlans(); render(); open({ type: "day", did: nd.id }); }; open({ type: "text", title: "Neuer Trainingstag", label: "Name", ph: "z. B. Oberkörper" }); break;
       case "dayedit": open({ type: "day", did: v }); break;
@@ -1219,6 +1230,11 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   function noteFor(id) { textCb = function (val) { if (val) S.notes[id] = val; else delete S.notes[id]; put("notes", S.notes); shut(); render(); }; open({ type: "text", title: "Notiz", label: ex(id).n, value: S.notes[id] || "", ph: "z. B. Sitzhöhe 4, Griff eng" }); }
   document.addEventListener("input", function (ev) {
     var t = ev.target, k = t.getAttribute("data-in"); if (!k) return;
+    if (k === "wdate") {
+      var wd = S.workouts.find(function (x) { return x.id === t.getAttribute("data-v"); }); if (!wd || !t.value) return;
+      var old = new Date(wd.start), nd = new Date(t.value + "T00:00:00"); nd.setHours(old.getHours(), old.getMinutes());
+      var delta = nd.getTime() - wd.start; wd.start += delta; wd.end += delta; sortWorkouts(); put("workouts", S.workouts); render(); toast("Datum geändert"); return;
+    }
     if (k === "bw" || k === "br") { var ae = S.active.entries[curIndex()]; if (!ae) return; var as = ae.sets.find(function (x) { return !x.done; }); if (as) { as[k === "bw" ? "w" : "r"] = t.value === "" ? null : t.value; saveActive(); } return; }
     if (k === "w" || k === "r") { S.active.entries[+t.getAttribute("data-e")].sets[+t.getAttribute("data-s")][k] = t.value === "" ? null : t.value; saveActive(); }
     else if (k === "q") { S.q = t.value; $("plist").innerHTML = pickList(S.sheet); }
@@ -1261,16 +1277,35 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var dark = t === "dark" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
     var m = $("themecolor"); if (m) m.setAttribute("content", dark ? "#0E0F11" : "#16181C");
   }
+  function newEmptyPlan() { textCb = function (val) { var p = { id: uid(), name: val || "Neuer Plan", days: [] }; S.plans.list.push(p); S.plans.active = p.id; savePlans(); shut(); render(); }; open({ type: "text", title: "Neuer Plan", label: "Name" }); }
+  var TPL = { name: "Push / Pull / Beine", days: [
+    ["Push", [["brustpresse",3,12],["schraegbankdruecken-kurzhantel",3,12],["schulterpresse",3,12],["seitheben-kabel",3,12],["ueberkopf-trizepsstrecken",3,12],["liegestuetze",2,12]]],
+    ["Pull", [["latzug-breit",3,12],["rudern-brustgestuetzt",3,12],["kabelrudern",3,12],["face-pulls",3,12],["scott-curls",3,12],["hammercurls",3,12]]],
+    ["Beine A", [["hackenschmidt",3,12],["beinstrecker",3,12],["beinbeuger-sitzend",3,12],["abduktoren",3,12],["wadenheben-stehend",3,12],["pallof-press",2,12]]],
+    ["Oberkörper", [["schraegbank-smith",3,12],["latzug-einarmig",3,12],["butterfly",3,12],["kurzhantelrudern",3,12],["seitheben-maschine",3,12],["bayesian-curl",2,12],["trizepsdruecken-kabel",2,12]]],
+    ["Beine B", [["hip-thrust-maschine",3,12],["beinbeuger-liegend",3,12],["beinpresse",3,12],["hyperextensions",3,12],["wadenheben-sitzend",3,12],["dead-bug",2,10]]]
+  ] };
+  function addTemplate() {
+    var pl = { id: uid(), name: TPL.name, days: TPL.days.map(function (d) { return { id: uid(), name: d[0], wd: null, items: d[1].map(function (x) { return { ex: x[0], s: x[1], r: x[2], rest: 60 }; }) }; }) };
+    S.plans.list.push(pl); S.plans.active = pl.id; savePlans(); shut(); S.tab = "heute"; S._carPos = null; render(); toast("Neuer Plan aktiv. Dein alter Plan bleibt unter „Plan“ gespeichert.");
+  }
   function boot() {
     S.plans = get("plans", null); if (!S.plans) { S.plans = clone(window.DEFAULT_PLANS); savePlans(); }
     S.custom = get("custom", []); S.settings = Object.assign({ rest: 60, weekGoal: 5, budget: 50 }, get("settings", {}));
     S.workouts = get("workouts", []); S.body = get("body", []); S.notes = get("notes", {}); S.lastBackup = get("lastBackup", null); S.profile = Object.assign({ name: "Arne", goal: "Fitter und muskulöser werden" }, get("profile", {}));
     S.active = get("active", null); applyTheme();
+    var staleNote = null;
+    if (S.active) {
+      var tt = setTimes(S.active), lastAct = Math.max.apply(null, tt.concat([S.active.start]));
+      if (Date.now() - lastAct > 6 * 3600e3) staleNote = tt.length ? "save" : "drop";
+    }
     if (!S.settings.mig60) { /* einmalig: alle Pausen auf 1 Minute */ S.settings.rest = 60; S.settings.mig60 = 1; put("settings", S.settings);
       S.plans.list.forEach(function (pl) { pl.days.forEach(function (d) { d.items.forEach(function (it) { it.rest = 60; }); }); }); savePlans(); }
     if (S.active) { S.tab = "training"; S.timer = S.active.timer && S.active.timer.end > Date.now() - 60000 ? S.active.timer : null; keepAwake(true); }
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
     render();
+    if (staleNote === "save") finish(true);
+    else if (staleNote === "drop") { S.active = null; S.timer = null; saveActive(); S.tab = "heute"; render(); toast("Altes, leeres Training verworfen"); }
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
   }
   boot();
