@@ -81,8 +81,8 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 /* Fotos */
 .ph { position: relative; overflow: hidden; background: var(--raised); }
 .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ph .b { animation: flip 2.6s infinite; }
-@keyframes flip { 0%, 42% { opacity: 0; } 50%, 92% { opacity: 1; } 100% { opacity: 0; } }
+.ph .b { animation: flip 3s steps(1, end) infinite; }
+@keyframes flip { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .ph .b { animation: none; opacity: 0; } }
 .ph.color img { filter: none; }
 .hero .ph .ini, .media .ini { display: none; }
@@ -164,7 +164,7 @@ body.training { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); 
 .sx.done { opacity: 1; }
 .sx.done::after { content: ""; position: absolute; inset: 0; background: rgba(22,163,74,.55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 24px no-repeat; }
 .fx { position: relative; }
-.fx .media { aspect-ratio: 16 / 9; max-height: 26vh; width: 100%; border-radius: 22px; }
+.fx .media { aspect-ratio: 4 / 3; max-height: 30vh; width: 100%; border-radius: 22px; }
 .fx .more { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.9); color: #14161A; display: grid; place-items: center; }
 .fx h2 { font-size: 1.6rem; margin-top: 14px; }
 .fx .sub { color: var(--muted); margin-top: 4px; }
@@ -229,7 +229,7 @@ body.training { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); 
 .restmini.over { background: var(--good); }
 .clockcard { position: relative; }
 .clockcard .rm-min { position: absolute; top: 12px; right: 12px; background: var(--raised); }
-.techlink { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--accent); font-weight: 700; font-size: .9rem; min-height: 36px; }
+.techlink { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--accent); font-weight: 700; font-size: .9rem; min-height: 36px; }
 .tipgrp { margin-top: 16px; }
 .tipgrp ul { margin: 6px 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 5px; }
 .tipgrp.bad li::marker { color: #E5484D; }
@@ -274,7 +274,14 @@ nav.tabs button[aria-current="page"] { color: var(--accent); }
 .sheet h2 { font-size: 1.7rem; }
 .sheet .full { margin-inline: -16px; margin-top: -8px; }
 .media { aspect-ratio: 3 / 2; max-width: 100%; border-radius: 0; }
-.media img { filter: none; }
+.media img { filter: none; object-fit: contain; background: #fff; }
+.media { background: #fff; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--bg); }
+.duo figure { margin: 0; position: relative; background: #fff; aspect-ratio: 3 / 2; }
+.duo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.duo figcaption { position: absolute; left: 8px; top: 8px; background: rgba(20,22,26,.75); color: #fff; font-size: .72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; letter-spacing: .04em; }
+.linkrow { display: flex; gap: 16px; flex-wrap: wrap; }
+.vidbtn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; border-radius: 14px; background: #FF0033; color: #fff; font-weight: 700; text-decoration: none; margin-top: 14px; }
 .menu .li { min-height: 54px; font-weight: 600; }
 .search { width: 100%; height: 46px; border: 0; border-radius: 12px; background: var(--surface); padding: 0 14px; font-size: 17px; }
 .chips { display: flex; gap: 8px; overflow-x: auto; margin-inline: -16px; padding-inline: 16px; scrollbar-width: none; }
@@ -544,6 +551,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   function ex(id) { return EXM[id] || { id: id, n: id, m: "Ganzkörper", t: "kraft" }; }
   function meta(id) { return (window.EXMETA || {})[id] || {}; }
   function itemName(it) { return it.n || ex(it.ex).n; }
+  function vidUrl(name) { return "https://www.youtube.com/results?search_query=" + encodeURIComponent(name + " richtig ausführen Technik"); }
   function photo(id, cls, anim) {
     var m = meta(id), e = ex(id);
     if (!m.img) return '<div class="ph ' + (cls || "") + '"><span class="ini">' + esc((e.m || "?").slice(0, 2)) + "</span></div>";
@@ -767,7 +775,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       '<div class="sub subrow"><span class="grow">' + (allDone ? "Alle Sätze geschafft" : "Satz " + (si + 1) + " von " + e.sets.length) + (allDone ? "" : " · Ziel " + defR(e, si) + (e.u === "s" ? " Sek." : cardio ? " Min." : " Wdh.")) + "</span>" +
         '<span class="setstep"><button data-a="setsminus" aria-label="Einen Satz weniger">−</button><b>' + e.sets.length + ' Sätze</b><button data-a="setsplus" aria-label="Einen Satz mehr">+</button></span></div>' +
       (S.notes[e.ex] ? '<p class="note">' + esc(S.notes[e.ex]) + "</p>" : "") +
-      (meta(e.ex).tips || (meta(e.ex).cues || []).length ? '<button class="techlink" data-a="exinfo" data-v="' + esc(e.ex) + '">' + ic("bolt", 16) + "Technik-Tipps</button>" : "");
+      (meta(e.ex).tips || (meta(e.ex).cues || []).length ? '<button class="techlink" data-a="exinfo" data-v="' + esc(e.ex) + '">' + ic("bolt", 16) + "Technik-Tipps</button>" : "") + '<a class="techlink" style="margin-left:16px" href="' + vidUrl(ex(e.ex).n) + '" target="_blank" rel="noopener">' + ic("play", 14) + "Video</a>";
     if (!allDone) {
       var st = e.sets[si], wv = st.w != null ? st.w : defW(e, si), rv = st.r != null ? st.r : defR(e, si);
       var wl = cardio ? "km" : body ? "Zusatz-kg" : info.assist ? "Hilfe-kg" : "kg", rl = cardio ? "Minuten" : e.u === "s" ? "Sekunden" : "Wdh.";
@@ -920,7 +928,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   }
   function shExInfo(s) {
     var e = ex(s.id), m = meta(s.id), hs = exHistory(s.id), body = e.t !== "kraft";
-    var h = (m.img ? '<div class="full">' + photo(s.id, "media color", true) + "</div>" : "") + '<div class="row" style="margin:14px 0 4px"><h2 class="display grow">' + esc(e.n) + '</h2><button class="iconbtn" data-a="close" aria-label="Schließen">' + ic("close", 20) + "</button></div>" +
+    var h = (m.img ? '<div class="full duo"><figure><img src="img/' + s.id + '-0.jpg" alt="Startposition"><figcaption>START</figcaption></figure><figure><img src="img/' + s.id + '-1.jpg" alt="Endposition"><figcaption>ENDE</figcaption></figure></div>' : "") + '<div class="row" style="margin:14px 0 4px"><h2 class="display grow">' + esc(e.n) + '</h2><button class="iconbtn" data-a="close" aria-label="Schließen">' + ic("close", 20) + "</button></div>" +
       '<div class="small muted">' + esc(e.m) + (e.eq ? " · " + esc(e.eq) : "") + (HIGH_SPINE[s.id] ? ' · <span class="tag">Hohe Rückenlast</span>' : "") + "</div>";
     if (hs.length) {
       var last = hs[0].top, first = hs[hs.length - 1].top, diff = (last.w || 0) - (first.w || 0);
@@ -931,6 +939,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
         return '<div class="wrow"><span>' + new Date(x.t).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" }) + '</span><span class="muted">' + x.sets.map(function (k) { return (k.w ? kg(k.w) + "×" : "") + k.r; }).join(" · ") + "</span></div>";
       }).join("") + "</div></div>";
     }
+    h += '<a class="vidbtn" href="' + vidUrl(e.n) + '" target="_blank" rel="noopener">' + ic("play", 18) + "Erklärvideo auf YouTube</a>";
     var tp = m.tips;
     if (tp) {
       h += '<div class="section" style="margin-top:16px"><span class="eyebrow">Richtig ausführen</span>';
@@ -1016,7 +1025,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       '<div class="section"><span class="eyebrow">Daten</span><span class="small muted">Deine Daten liegen nur auf diesem iPhone. Sichere sie regelmäßig, z. B. in iCloud Drive. ' + (S.lastBackup ? "Letztes Backup: " + fmtDate(S.lastBackup) + "." : "Noch kein Backup.") + "</span>" +
       '<div class="list">' + row("box", "Backup speichern", "", "export") + '<label for="importfile" class="li" role="button"><span class="lic">' + ic("down", 18) + '</span><span class="grow"><b>Backup oder Plan laden</b><span class="s">Datei auswählen</span></span><span class="chev">' + ic("right", 18) + "</span></label>" + row("plan", "Als Text einfügen", "Falls die Datei sich nicht wählen lässt", "paste") + "</div>" +
       (S.confirm === "import" && S.pendingImport ? '<div class="panel stack"><span class="small"><b>Backup vom ' + fmtDate(S.pendingImport.date) + "</b> mit " + (S.pendingImport.workouts || []).length + ' Trainings laden? Alle aktuellen Daten werden ersetzt.</span><div class="row"><button class="ghostbtn danger grow" data-a="importok">Ersetzen</button><button class="ghostbtn" data-a="noconfirm">Abbrechen</button></div></div>' : "") +
-      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 14<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
+      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 15<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
   }
 
   /* ---------- Pause & Uhr ---------- */
@@ -1283,7 +1292,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var m = $("themecolor"); if (m) m.setAttribute("content", dark ? "#0E0F11" : "#16181C");
   }
   function newEmptyPlan() { textCb = function (val) { var p = { id: uid(), name: val || "Neuer Plan", days: [] }; S.plans.list.push(p); S.plans.active = p.id; savePlans(); shut(); render(); }; open({ type: "text", title: "Neuer Plan", label: "Name" }); }
-  var OWN = {"name": "Mein Push / Pull / Beine", "days": [["Push", [{"ex": "schraegbankdruecken-kurzhantel", "s": 3, "r": 12, "rest": 60, "wOld": 12.5}, {"ex": "brustpresse", "s": 3, "r": 12, "rest": 60, "wOld": 70, "n": "Bankdrücken liegend (Plate Loaded)"}, {"ex": "cable-crossover", "s": 3, "r": 10, "rest": 60, "wOld": 12, "n": "Kabel-Butterfly nach unten"}, {"ex": "seitheben-kurzhantel", "s": 3, "r": 12, "rest": 60, "wOld": 7.5}, {"ex": "ueberkopf-trizepsstrecken", "s": 3, "r": 12, "rest": 60, "wOld": 25, "n": "Trizepsdrücken über Kopf (Seil)"}, {"ex": "crunches", "s": 3, "r": 15, "rest": 60, "flat": true}]], ["Pull", [{"ex": "latzug-breit", "s": 3, "r": 12, "rest": 60, "wOld": 59, "n": "Latziehen zur Brust"}, {"ex": "kurzhantelrudern", "s": 3, "r": 12, "rest": 60, "wOld": 17.5}, {"ex": "rudern-brustgestuetzt", "s": 3, "r": 12, "rest": 60}, {"ex": "face-pulls", "s": 3, "r": 12, "rest": 60, "wOld": 22.5}, {"ex": "langhantelcurls", "s": 2, "r": 12, "rest": 60, "wOld": 20}, {"ex": "pallof-press", "s": 3, "r": 12, "rest": 60}]], ["Beine 1", [{"ex": "goblet-squats", "s": 3, "r": 12, "rest": 60, "wOld": 30, "n": "Kettlebell-Frontkniebeuge"}, {"ex": "hip-thrusts", "s": 3, "r": 12, "rest": 60, "wOld": 60, "n": "Hip Thrust (Langhantel)"}, {"ex": "beinbeuger-sitzend", "s": 3, "r": 12, "rest": 60, "wOld": 90}, {"ex": "bulgarian-split-squats", "s": 3, "r": 12, "rest": 60, "wOld": 12}, {"ex": "beinstrecker", "s": 3, "r": 12, "rest": 60, "wOld": 100}, {"ex": "wadenheben-sitzend", "s": 3, "r": 12, "rest": 60, "wOld": 110}]], ["Oberkörper", [{"ex": "bankdruecken-langhantel", "s": 4, "r": 12, "rest": 60, "wOld": 12.5, "n": "Langhantel-Bankdrücken"}, {"ex": "latzug-einarmig", "s": 3, "r": 12, "rest": 60}, {"ex": "klimmzug-maschine", "s": 3, "r": 5, "rest": 60, "wOld": 40}, {"ex": "schraegbank-smith", "s": 3, "r": 10, "rest": 60}, {"ex": "vorgebeugtes-seitheben", "s": 3, "r": 12, "rest": 60, "wOld": 7.5, "n": "Reverse Butterfly stehend (KH)"}, {"ex": "hammercurls", "s": 2, "r": 12, "rest": 60, "wOld": 8}, {"ex": "kabelcrunch", "s": 3, "r": 12, "rest": 60, "wOld": 50, "n": "Kabel-Crunches kniend"}]], ["Beine 2", [{"ex": "beinpresse", "s": 4, "r": 12, "rest": 60, "wOld": 150}, {"ex": "abduktoren", "s": 3, "r": 12, "rest": 60}, {"ex": "beinbeuger-liegend", "s": 3, "r": 12, "rest": 60}, {"ex": "ausfallschritte", "s": 3, "r": 12, "rest": 60, "wOld": 12, "n": "Ausfallschritt-Kniebeugen (KH)"}, {"ex": "wadenheben-stehend", "s": 3, "r": 12, "rest": 60, "wOld": 100}, {"ex": "hyperextensions", "s": 2, "r": 15, "rest": 60, "n": "45°-Back-Extensions", "flat": true}]]]};
+  var OWN = {"name": "Mein Push / Pull / Beine", "days": [["Push", [{"ex": "schraegbankdruecken-kurzhantel", "s": 3, "r": 12, "rest": 60, "wOld": 12.5}, {"ex": "brustpresse", "s": 3, "r": 12, "rest": 60, "wOld": 70, "n": "Bankdrücken liegend (Plate Loaded)"}, {"ex": "cable-crossover", "s": 3, "r": 10, "rest": 60, "wOld": 12, "n": "Kabel-Butterfly nach unten"}, {"ex": "seitheben-kurzhantel", "s": 3, "r": 12, "rest": 60, "wOld": 7.5}, {"ex": "ueberkopf-trizepsstrecken", "s": 3, "r": 12, "rest": 60, "wOld": 25, "n": "Trizepsdrücken über Kopf (Seil)"}, {"ex": "crunches", "s": 3, "r": 15, "rest": 60, "flat": true}]], ["Pull", [{"ex": "latzug-breit", "s": 3, "r": 12, "rest": 60, "wOld": 59, "n": "Latziehen zur Brust"}, {"ex": "kurzhantelrudern", "s": 3, "r": 12, "rest": 60, "wOld": 17.5}, {"ex": "rudern-brustgestuetzt", "s": 3, "r": 12, "rest": 60}, {"ex": "face-pulls", "s": 3, "r": 12, "rest": 60, "wOld": 22.5}, {"ex": "langhantelcurls", "s": 2, "r": 12, "rest": 60, "wOld": 20}, {"ex": "pallof-press", "s": 3, "r": 12, "rest": 60}]], ["Beine 1", [{"ex": "goblet-squats", "s": 3, "r": 12, "rest": 60, "wOld": 30, "n": "Kettlebell-Frontkniebeuge"}, {"ex": "hip-thrusts", "s": 3, "r": 12, "rest": 60, "wOld": 60, "n": "Hip Thrust (Langhantel)"}, {"ex": "beinbeuger-sitzend", "s": 3, "r": 12, "rest": 60, "wOld": 90}, {"ex": "bulgarian-split-squats", "s": 3, "r": 12, "rest": 60, "wOld": 12}, {"ex": "beinstrecker", "s": 3, "r": 12, "rest": 60, "wOld": 100}, {"ex": "wadenheben-stehend", "s": 3, "r": 12, "rest": 60, "wOld": 100}]], ["Oberkörper", [{"ex": "bankdruecken-langhantel", "s": 4, "r": 12, "rest": 60, "wOld": 12.5, "n": "Langhantel-Bankdrücken"}, {"ex": "latzug-einarmig", "s": 3, "r": 12, "rest": 60}, {"ex": "klimmzug-maschine", "s": 3, "r": 5, "rest": 60, "wOld": 40}, {"ex": "cable-crossover", "s": 3, "r": 10, "rest": 60, "wOld": 12, "n": "Kabel-Butterfly nach unten"}, {"ex": "vorgebeugtes-seitheben", "s": 3, "r": 12, "rest": 60, "wOld": 7.5, "n": "Reverse Butterfly stehend (KH)"}, {"ex": "hammercurls", "s": 2, "r": 12, "rest": 60, "wOld": 8}, {"ex": "kabelcrunch", "s": 3, "r": 12, "rest": 60, "wOld": 50, "n": "Kabel-Crunches kniend"}]], ["Beine 2", [{"ex": "beinpresse", "s": 4, "r": 12, "rest": 60, "wOld": 150}, {"ex": "abduktoren", "s": 3, "r": 12, "rest": 60}, {"ex": "beinbeuger-sitzend", "s": 3, "r": 12, "rest": 60, "wOld": 90}, {"ex": "ausfallschritte", "s": 3, "r": 12, "rest": 60, "wOld": 12, "n": "Ausfallschritt-Kniebeugen (KH)"}, {"ex": "wadenheben-stehend", "s": 3, "r": 12, "rest": 60, "wOld": 100}, {"ex": "hyperextensions", "s": 2, "r": 15, "rest": 60, "n": "45°-Back-Extensions", "flat": true}]]]};
   function addOwn() {
     var pl = { id: uid(), name: OWN.name, days: OWN.days.map(function (d) { return { id: uid(), name: d[0], wd: null, items: clone(d[1]) }; }) };
     S.plans.list.push(pl); S.plans.active = pl.id; savePlans(); shut(); S.tab = "heute"; S._carPos = null; render(); toast("Dein Plan ist aktiv. Andere Pläne bleiben gespeichert.");
@@ -1314,8 +1323,8 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     if (S.active) { S.tab = "training"; S.timer = S.active.timer && S.active.timer.end > Date.now() - 60000 ? S.active.timer : null; keepAwake(true); }
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
     render();
-    if (!S.settings.ownV2) { S.plans.list.forEach(function (pl) { if (pl.name === OWN.name) pl.days.forEach(function (d, i) { if (OWN.days[i]) { d.name = OWN.days[i][0]; d.items = clone(OWN.days[i][1]); } }); });
-      S.settings.ownV2 = 1; put("settings", S.settings); savePlans(); render(); }
+    if (S.settings.ownV2 !== 3) { S.plans.list.forEach(function (pl) { if (pl.name === OWN.name) pl.days.forEach(function (d, i) { if (OWN.days[i]) { d.name = OWN.days[i][0]; d.items = clone(OWN.days[i][1]); } }); });
+      S.settings.ownV2 = 3; put("settings", S.settings); savePlans(); render(); }
     if (staleNote === "save") finish(true);
     else if (staleNote === "drop") { S.active = null; S.timer = null; saveActive(); S.tab = "heute"; render(); toast("Altes, leeres Training verworfen"); }
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
