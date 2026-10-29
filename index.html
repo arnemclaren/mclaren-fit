@@ -345,11 +345,11 @@ body { background: var(--band) !important; padding: 0 !important; min-height: 10
 body.training #app { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
 .top, .head { position: sticky; top: 0; z-index: 8; background: var(--band); color: #F3F4F6;
   margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 14px calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
-  padding: calc(env(safe-area-inset-top, 0px) + 20px) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
+  padding: calc(max(env(safe-area-inset-top, 0px), 20px) + 30px) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); }
 .top .date { color: rgba(243,244,246,.65); }
 .head h1 { color: #F3F4F6; font-size: 1.4rem; }
 .tbar { top: 0; background: var(--band); color: #F3F4F6; margin-bottom: 14px;
-  padding: calc(env(safe-area-inset-top, 0px) + 20px) 16px 12px; }
+  padding: calc(max(env(safe-area-inset-top, 0px), 20px) + 30px) 16px 8px; }
 .tbar .clock { color: rgba(243,244,246,.65); }
 .tbar .iconbtn { background: rgba(255,255,255,.1); color: #F3F4F6; }
 .strip2 { margin-top: 0; }
@@ -621,7 +621,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
     var el = $("float");
     if (S.active && S.tab !== "training") { el.innerHTML = '<div class="resume"><button data-a="resume">' + ic("play", 18) + '<span class="grow">' + esc(S.active.dayName) + " läuft · weiter</span>" + ic("right", 18) + "</button></div>"; return; }
     if (S.active && S.timer) {
-      var a = S.active, ci = a.cur != null ? a.cur : 0, nxt = a.entries[ci] && a.entries[ci].sets.some(function (s) { return !s.done; }) ? a.entries[ci].name : (a.entries.find(function (x) { return x.sets.some(function (s) { return !s.done; }); }) || {}).name;
+      var a = S.active, ci = a.cur != null ? a.cur : 0, nxt = a.entries[ci] && a.entries[ci].sets.some(function (s) { return !s.done; }) ? a.entries[ci].name : (a.entries[nextAfter(a, ci)] || {}).name;
       if (S.timer.mini) { el.innerHTML = ""; return; }
       el.innerHTML = '<div class="clockbg" data-a="clockbg"><div class="clockcard" id="rest"><button class="iconbtn rm-min" data-a="restmini" aria-label="Pausenuhr verkleinern">' + ic("down", 20) + '</button><div class="eyebrow" id="rlbl">Pause</div>' +
         '<div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="tr" cx="60" cy="60" r="52"/><circle class="pr" id="rring" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="tt" id="rtime">0:00</div></div>' +
@@ -741,6 +741,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
   }
   function defW(e, i) { var st = e.sets[i]; if (st.tw != null) return st.tw; for (var j = i - 1; j >= 0; j--) if (e.sets[j].done && e.sets[j].w != null) return e.sets[j].w; return e.pw; }
   function defR(e, i) { var st = e.sets[i]; return st.tr != null ? st.tr : (e.pyr ? Math.max(6, e.r0 - 2 * Math.min(i, 2)) : e.pr); }
+  function nextAfter(a, i) { for (var k = i + 1; k < a.entries.length; k++) if (a.entries[k].sets.some(function (s) { return !s.done; })) return k; return -1; }
   function curIndex() {
     var a = S.active;
     if (a.cur === -1) return -1;
@@ -776,7 +777,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
         '<div class="hint2">' + (e.cut && si === 0 ? '<span class="up">−' + e.cut + " %</span> nach der Pause" + (prev ? " · vorher " + (prev.w ? kg(prev.w) + " kg × " : "") + prev.r : "") : e.up && si === 0 ? '<span class="up">+2,5 kg</span> · Letztes Mal alle Sätze geschafft' : prev ? "Letztes Mal: " + (prev.w ? kg(prev.w) + " kg × " : "") + prev.r : "") + "</div>" +
         '<button class="cta" data-a="setok">' + ic("check", 20) + "Satz " + (si + 1) + " geschafft</button>";
     } else {
-      var nx = a.entries.findIndex(function (x, i) { return i !== ci && x.sets.some(function (s) { return !s.done; }); });
+      var nx = nextAfter(a, ci);
       h += '<div class="allok"><b>Übung erledigt</b></div>' + (nx >= 0 ? '<button class="cta" data-a="cur" data-v="' + nx + '">Weiter: ' + esc(a.entries[nx].name) + "</button>" : '<button class="cta" data-a="finishask">' + ic("check", 20) + "Training abschließen</button>");
     }
     var chips = e.sets.map(function (s, k) { return s.done ? '<button data-a="reopen" data-s="' + k + '" aria-label="Satz ' + (k + 1) + ' bearbeiten">✓ ' + (s.w ? kg(s.w) + " × " : "") + s.r + "</button>" : k === si ? "" : "<span>Satz " + (k + 1) + "</span>"; }).join("");
@@ -1015,7 +1016,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
       '<div class="section"><span class="eyebrow">Daten</span><span class="small muted">Deine Daten liegen nur auf diesem iPhone. Sichere sie regelmäßig, z. B. in iCloud Drive. ' + (S.lastBackup ? "Letztes Backup: " + fmtDate(S.lastBackup) + "." : "Noch kein Backup.") + "</span>" +
       '<div class="list">' + row("box", "Backup speichern", "", "export") + '<label for="importfile" class="li" role="button"><span class="lic">' + ic("down", 18) + '</span><span class="grow"><b>Backup oder Plan laden</b><span class="s">Datei auswählen</span></span><span class="chev">' + ic("right", 18) + "</span></label>" + row("plan", "Als Text einfügen", "Falls die Datei sich nicht wählen lässt", "paste") + "</div>" +
       (S.confirm === "import" && S.pendingImport ? '<div class="panel stack"><span class="small"><b>Backup vom ' + fmtDate(S.pendingImport.date) + "</b> mit " + (S.pendingImport.workouts || []).length + ' Trainings laden? Alle aktuellen Daten werden ersetzt.</span><div class="row"><button class="ghostbtn danger grow" data-a="importok">Ersetzen</button><button class="ghostbtn" data-a="noconfirm">Abbrechen</button></div></div>' : "") +
-      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 11<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
+      '</div><div class="small muted" style="margin-top:18px;text-align:center">McLaren-Fit · Version 12<br>Übungsfotos: free-exercise-db (Public Domain)<br>Minutenangaben sind Schätzungen. Kein Ersatz für ärztlichen Rat.</div>';
   }
 
   /* ---------- Pause & Uhr ---------- */
@@ -1111,7 +1112,9 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
         if (fs.w != null) { fe.pw = fs.w; /* geändertes Gewicht für die folgenden Sätze übernehmen, wenn es vom Vorschlag abweicht */
           if (fw != null) for (var nn = fi + 1; nn < fe.sets.length; nn++) if (!fe.sets[nn].done && fe.sets[nn].w == null) fe.sets[nn].tw = fs.w; }
         var restLeft = A.entries.some(function (x) { return x.sets.some(function (y) { return !y.done; }); });
-        if (fe.sets.every(function (x) { return x.done; })) { var nx2 = A.entries.findIndex(function (x) { return x.sets.some(function (y) { return !y.done; }); }); if (nx2 >= 0) A.cur = nx2; }
+        var exDone = fe.sets.every(function (x) { return x.done; }), nx2 = nextAfter(A, curIndex());
+        if (exDone && nx2 >= 0) A.cur = nx2;
+        if (exDone && nx2 < 0) restLeft = false; /* letzte Übung fertig: übersprungene bleiben übersprungen */
         if (restLeft) startRest(fe.rest); else S.timer = null;
         unlock(); saveActive(); render(); if (!restLeft) open({ type: "finish" }); break;
       case "setsplus": var pe = A.entries[curIndex()]; if (pe) { var lst = pe.sets[pe.sets.length - 1]; pe.sets.push({ w: null, r: null, done: false, tw: lst.w != null ? lst.w : lst.tw, tr: lst.tr }); saveActive(); render(); } break;
@@ -1133,6 +1136,7 @@ window.DEFAULT_PLANS={"list": [], "active": null};</script>
         menu([
           { label: "Satz hinzufügen", fn: function () { E.sets.push({ w: null, r: null, done: false }); saveActive(); shut(); render(); } },
           { label: "Übung hinzufügen", fn: function () { pickCb = function (id) { A.entries.splice(ei + 1, 0, entry({ ex: id, s: 3, r: 10 })); A.cur = ei + 1; saveActive(); shut(); render(); }; open({ type: "picker" }); } },
+          { label: "Übung überspringen", fn: function () { var nn = nextAfter(A, ei); shut(); if (nn >= 0) { A.cur = nn; saveActive(); render(); window.scrollTo(0, 0); } else open({ type: "finish" }); } },
           { label: "Übung tauschen", fn: function () { pickCb = function (id) { var ne = entry({ ex: id, s: E.sets.length, r: E.pr, rest: E.rest }); A.entries[ei] = ne; saveActive(); shut(); render(); }; open({ type: "picker", swapOf: E.ex, mf: ex(E.ex).m }); } },
           { label: S.notes[E.ex] ? "Notiz ändern" : "Notiz hinzufügen", fn: function () { noteFor(E.ex); } },
           E.sets.length > 1 ? { label: "Letzten Satz entfernen", fn: function () { E.sets.pop(); saveActive(); shut(); render(); } } : null,
